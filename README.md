@@ -1,0 +1,1 @@
+The point of this project is to be able to run Texas Hold 'Em poker simulations as fast as humanly possible.
