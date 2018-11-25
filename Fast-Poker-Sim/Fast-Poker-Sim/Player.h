@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Action.h"
 #include "Card.h"
 #include "GameState.h"
 #include "IChoiceMaker.h"
@@ -20,10 +21,10 @@ public:
 	Player() : isActive(false), isPlaying(false), chips(0) {}
 	~Player() {}
 
-	inline void MakeChoice(GameState& gameState)
+	inline Action::ActionType MakeChoice(GameState& gameState)
 	{
 		assert(choiceMaker != nullptr);
-		this->choiceMaker->MakeChoice(gameState);
+		return this->choiceMaker->MakeChoice(gameState);
 	}
 
 	inline void Activate(char playerNum, uint32_t chips, IChoiceMaker* choiceMaker)

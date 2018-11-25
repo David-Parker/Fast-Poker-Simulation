@@ -34,7 +34,7 @@ public:
 
 	void NewSession(Players players);
 	void NextTurn();
-	void GetPlayerChoices();
+	void HandlePlayerChoices();
 
 	inline void GetCards(std::vector<Card>& hand)
 	{

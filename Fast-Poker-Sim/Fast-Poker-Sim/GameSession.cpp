@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <iterator>
+#include <iostream>
+#include "Action.h"
 #include "GameSession.h"
 
 void GameSession::PostBlinds()
@@ -122,6 +124,7 @@ void GameSession::NextTurn()
 	else if (this->gameState.currentTurnState == GameState::StreetStates::End)
 	{
 		this->complete = true;
+		return;
 	}
 	else
 	{
@@ -131,12 +134,28 @@ void GameSession::NextTurn()
 	this->gameState.currentTurnState++;
 }
 
-void GameSession::GetPlayerChoices()
+void GameSession::HandlePlayerChoices()
 {
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
 		Player& p = players[i];
 
-		if (p.isPlaying) p.MakeChoice(this->gameState);
+		if (p.isPlaying)
+		{
+			Action::ActionType action = p.MakeChoice(this->gameState);
+
+			if (this->gameState.currentTurnState == GameState::StreetStates::End)
+			{
+				assert(action == Action::ActionType::NoAction);
+			}
+			else if (this->gameState.currentHandState == GameState::BetStates::NoBets)
+			{
+				assert(action == Action::ActionType::Bet || action == Action::ActionType::Check || action == Action::ActionType::Fold);
+			}
+			else if (this->gameState.currentHandState == GameState::BetStates::Bets)
+			{
+				assert(action == Action::ActionType::Call || action == Action::ActionType::Raise || action == Action::ActionType::Fold);
+			}
+		}
 	}
 }

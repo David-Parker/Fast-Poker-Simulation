@@ -1,4 +1,5 @@
 #pragma once
+#include "Action.h"
 #include "IChoiceMaker.h"
 #include "GameState.h"
 
@@ -9,6 +10,6 @@ public:
 	RandomChoiceMaker();
 	~RandomChoiceMaker();
 
-	void MakeChoice(GameState& gameState) override;
+	Action::ActionType MakeChoice(GameState& gameState) override;
 };
 

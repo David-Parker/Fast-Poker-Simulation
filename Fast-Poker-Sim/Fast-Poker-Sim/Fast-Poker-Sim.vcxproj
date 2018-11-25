@@ -119,6 +119,7 @@
     <ClCompile Include="RandomChoiceMaker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Action.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="GameConfiguration.h" />
     <ClInclude Include="GameSession.h" />

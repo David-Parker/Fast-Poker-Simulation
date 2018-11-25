@@ -52,6 +52,7 @@ void HoldEm::Stop()
 bool HoldEm::Update(int& gamesPlayed)
 {
 	assert(gamesPlayed >= 0);
+	assert(this->isPlaying == true);
 
 	if (this->session.complete)
 	{
@@ -62,6 +63,7 @@ bool HoldEm::Update(int& gamesPlayed)
 	else
 	{
 		this->session.NextTurn();
+		this->session.HandlePlayerChoices();
 	}
 
 	if (this->numPlayers < 2)
