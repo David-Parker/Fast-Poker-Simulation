@@ -1,17 +1,19 @@
 #pragma once
 #include <vector>
 #include "Player.h"
+#include "GameConfiguration.h"
 #include "GameSession.h"
 
 /* Simulation of Texas Hold 'Em no limits. */
 class HoldEm
 {
 private:
-	const int maxPlayers = 8;
 	bool isPlaying;
 	char numPlayers;
-	Player players[8];
+	Player players[MAX_PLAYERS];
 	GameSession session;
+
+	void RemoveLosingPlayers();
 
 public:
 	HoldEm(char numPlayers);

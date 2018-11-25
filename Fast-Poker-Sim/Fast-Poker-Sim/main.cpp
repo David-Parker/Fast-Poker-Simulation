@@ -4,14 +4,15 @@
 
 int main()
 {
-	HoldEm game(2);
+	HoldEm game(8);
 	int gamesPlayed = 0;
 	game.Start();
 
 	// game loop
 	while (game.Update(gamesPlayed))
 	{
-		if (gamesPlayed == 100)
+		//std::cout << gamesPlayed << std::endl;
+		if (gamesPlayed == 1000)
 		{
 			break;
 		}

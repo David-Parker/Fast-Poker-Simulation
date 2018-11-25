@@ -1,10 +1,29 @@
 #include <cassert>
 #include "HoldEm.h"
+#include "RandomChoiceMaker.h"
 
-HoldEm::HoldEm(char numPlayers) : numPlayers(numPlayers), isPlaying(false), players(), session()
+void HoldEm::RemoveLosingPlayers()
+{
+	for (char i = 0; i < MAX_PLAYERS; ++i)
+	{
+		Player& p = players[i];
+
+		if (p.isActive == true)
+		{
+			assert(p.chips >= 0);
+
+			if (p.chips == 0)
+			{
+				RemovePlayer(i);
+			}
+		}
+	}
+}
+
+HoldEm::HoldEm(char numPlayers) : numPlayers(), isPlaying(false), players(), session()
 {
 	assert(numPlayers >= 2);
-	assert(numPlayers <= maxPlayers);
+	assert(numPlayers <= MAX_PLAYERS);
 
 	for (char i = 0; i < numPlayers; ++i)
 	{
@@ -20,6 +39,7 @@ void HoldEm::Start()
 {
 	assert(this->isPlaying == false);
 	this->isPlaying = true;
+	this->session.NewSession(this->players);
 }
 
 void HoldEm::Stop()
@@ -35,7 +55,8 @@ bool HoldEm::Update(int& gamesPlayed)
 
 	if (this->session.complete)
 	{
-		this->session.NewSession();
+		RemoveLosingPlayers();
+		this->session.NewSession(this->players);
 		gamesPlayed++;
 	}
 	else
@@ -43,21 +64,27 @@ bool HoldEm::Update(int& gamesPlayed)
 		this->session.NextTurn();
 	}
 
+	if (this->numPlayers < 2)
+	{
+		Stop();
+	}
+
 	return this->isPlaying;
 }
 
 char HoldEm::AddPlayer()
 {
-	assert(numPlayers < maxPlayers);
+	assert(this->numPlayers < MAX_PLAYERS);
 
-	for (char i = 0; i < numPlayers; ++i)
+	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
 		Player& p = players[i];
 
 		if (p.isActive == false)
 		{
-			p.Activate();
-			numPlayers++;
+			p.Activate(i, STARTING_CHIPS, new RandomChoiceMaker());
+			p.Play();
+			this->numPlayers++;
 			return i;
 		}
 	}
@@ -68,10 +95,10 @@ char HoldEm::AddPlayer()
 
 void HoldEm::RemovePlayer(char player)
 {
-	assert(numPlayers > 0);
-	assert(player < maxPlayers);
+	assert(this->numPlayers > 0);
+	assert(player < MAX_PLAYERS);
 	assert(player >= 0);
 
-	players[player].Deactivate();
-	numPlayers--;
+	this->players[player].Deactivate();
+	this->numPlayers--;
 }
