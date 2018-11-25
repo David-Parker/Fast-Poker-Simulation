@@ -13,15 +13,39 @@ class GameSession
 typedef Player(&Players)[MAX_PLAYERS];
 
 private:
+	static unsigned int g_seed;
+	Card deck[52];
+	char topOfDeck;
 	Player* players;
 	void PostBlinds();
 
-	inline void MoveCardsFromDeck(char numCards, std::vector<Card>& destination)
+	inline void fast_srand(int seed) {
+		g_seed = seed;
+	}
+
+	inline int fast_rand() {
+		g_seed = (214013 * g_seed + 2531011);
+		return (g_seed >> 16) & 0x7FFF;
+	}
+
+	inline void ShuffleDeck()
+	{
+		for (char i = 52 - 1; i > 0; --i)
+		{
+			char j = fast_rand() % (i + 1);
+
+			Card::Swap(&deck[i], &deck[j]);
+		}
+	}
+
+	inline void MoveCardsFromDeck(char numCards, Card** destination)
 	{
 		assert(numCards <= 52);
 
-		std::move(deck.end() - numCards, deck.end(), std::back_inserter(destination));
-		deck._Pop_back_n(numCards);
+		for (char i = 0; i < numCards; ++i)
+		{
+			destination[i] = (&deck[topOfDeck--]);
+		}
 	}
 
 public:
@@ -29,16 +53,15 @@ public:
 	~GameSession();
 	GameState gameStatePrevious;
 	GameState gameState;
-	std::vector<Card> deck;
 	bool complete;
 
 	void NewSession(Players players);
 	void NextTurn();
 	void HandlePlayerChoices();
 
-	inline void GetCards(std::vector<Card>& hand)
+	inline void GetCards(Card** hand)
 	{
-		assert(deck.size() >= 2);
+		assert(topOfDeck >= 1);
 		// Inserts two cards from the deck to the hand passed out by reference.
 		MoveCardsFromDeck(2, hand);
 	}

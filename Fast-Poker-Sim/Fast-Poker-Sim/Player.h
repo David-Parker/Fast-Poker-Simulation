@@ -16,9 +16,9 @@ public:
 	bool isPlaying;
 	char playerNum;
 	uint32_t chips;
-	std::vector<Card> hand;
+	Card* hand[2];
 
-	Player() : isActive(false), isPlaying(false), chips(0) {}
+	Player() : isActive(false), isPlaying(false), chips(0), hand() {}
 	~Player() {}
 
 	inline Action::ActionType MakeChoice(GameState& gameState)
@@ -52,7 +52,8 @@ public:
 
 	inline void ClearHand()
 	{
-		hand.clear();
+		hand[0] = nullptr;
+		hand[1] = nullptr;
 	}
 
 	inline void Quit()

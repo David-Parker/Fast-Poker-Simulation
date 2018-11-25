@@ -18,6 +18,16 @@ struct Card
 
 	Card() : value(0), rank(0) {}
 
+	inline static void Swap(Card* a, Card* b)
+	{
+		char tempRank = a->rank;
+		char tempValue = a->value;
+		a->rank = b->rank;
+		a->value = b->value;
+		b->rank = tempRank;
+		b->value = tempValue;
+	}
+
 	inline void Assign(char value, char rank)
 	{
 		assert(value >= 2);

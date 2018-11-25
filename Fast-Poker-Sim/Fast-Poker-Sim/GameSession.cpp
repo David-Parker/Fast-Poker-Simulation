@@ -4,6 +4,8 @@
 #include "Action.h"
 #include "GameSession.h"
 
+unsigned int GameSession::g_seed = 0;
+
 void GameSession::PostBlinds()
 {
 	assert(this->gameState.numPlaying >= 2);
@@ -45,8 +47,16 @@ void GameSession::PostBlinds()
 	bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND);
 }
 
-GameSession::GameSession() : deck(52), complete(false), gameState(), gameStatePrevious(), players()
+GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51)
 {
+	char index = 0;
+	for (char i = 2; i <= 14; ++i)
+	{
+		for (char j = 1; j <= 4; ++j)
+		{
+			deck[index++].Assign(i, j);
+		}
+	}
 }
 
 GameSession::~GameSession()
@@ -61,23 +71,8 @@ void GameSession::NewSession(Players players)
 
 	this->gameState.Reset();
 
-	char cardsToReplace = 52 - deck.size();
-
-	for (char i = 0; i < cardsToReplace; ++i)
-	{
-		deck.emplace_back(Card());
-	}
-
-	char index = 0;
-	for (char i = 2; i <= 14; ++i)
-	{
-		for (char j = 1; j <= 4; ++j)
-		{
-			deck[index++].Assign(i, j);
-		}
-	}
-
-	std::random_shuffle(deck.begin(), deck.end());
+	this->topOfDeck = 51;
+	ShuffleDeck();
 
 	char numPlaying = 0;
 	for (char i = 0; i < MAX_PLAYERS; ++i)

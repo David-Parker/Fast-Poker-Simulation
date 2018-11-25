@@ -12,7 +12,8 @@ public:
 
 	char currentTurnState;
 	char currentHandState;
-	std::vector<Card> table;
+	Card* table[5];
+	char numCards;
 	char numPlaying;
 	uint32_t currentPot;
 	char playerBigBlind;
@@ -20,11 +21,21 @@ public:
 
 	GameState() : currentTurnState(StreetStates::Deal), currentHandState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1) {}
 
+	inline void ClearTable()
+	{
+		for (char i = 0; i < 5; ++i)
+		{
+			table[i] = nullptr;
+		}
+
+		numCards = 0;
+	}
+
 	inline void Reset()
 	{
 		this->currentTurnState = StreetStates::Deal;
 		this->currentHandState = BetStates::NoBets;
-		this->table.clear();
+		ClearTable();
 		this->numPlaying = 0;
 		this->currentPot = 0;
 		this->playerBigBlind = 0;

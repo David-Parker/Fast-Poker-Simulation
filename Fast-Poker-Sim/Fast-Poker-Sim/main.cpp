@@ -12,10 +12,10 @@ int main()
 	while (game.Update(gamesPlayed))
 	{
 		//std::cout << gamesPlayed << std::endl;
-		if (gamesPlayed == 1000)
+		/*if (gamesPlayed == 1000)
 		{
 			break;
-		}
+		}*/
 	}
 
 	std::cout << "Done.";
