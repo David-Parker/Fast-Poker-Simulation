@@ -1,10 +1,9 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+#include <time.h>
 #include "Action.h"
 #include "GameSession.h"
-
-unsigned int GameSession::g_seed = 0;
 
 void GameSession::PostBlinds()
 {
@@ -49,6 +48,8 @@ void GameSession::PostBlinds()
 
 GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51)
 {
+	g_seed = time(NULL);
+
 	char index = 0;
 	for (char i = 2; i <= 14; ++i)
 	{
@@ -110,11 +111,13 @@ void GameSession::NextTurn()
 	else if (this->gameState.currentTurnState == GameState::StreetStates::Flop)
 	{
 		MoveCardsFromDeck(3, this->gameState.table);
+		this->gameState.numCards += 3;
 	}
 	// Turn and river, move one card from the deck to the table.
 	else if (this->gameState.currentTurnState == GameState::StreetStates::Turn || this->gameState.currentTurnState == GameState::StreetStates::River)
 	{
 		MoveCardsFromDeck(1, this->gameState.table);
+		this->gameState.numCards += 1;
 	}
 	else if (this->gameState.currentTurnState == GameState::StreetStates::End)
 	{

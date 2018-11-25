@@ -13,7 +13,7 @@ class GameSession
 typedef Player(&Players)[MAX_PLAYERS];
 
 private:
-	static unsigned int g_seed;
+	unsigned int g_seed;
 	Card deck[52];
 	char topOfDeck;
 	Player* players;
