@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
-#include <time.h>
 #include "Action.h"
 #include "GameSession.h"
 
@@ -42,14 +41,21 @@ void GameSession::PostBlinds()
 	assert(smallBlindPlayer->chips > 0);
 
 	// Make big and small blind players bet.
-	smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND);
-	bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND);
+	uint32_t smallBet = smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND);
+	uint32_t bigBet = bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND);
+	this->betAmount = BIG_BLIND;
+	this->playerStates[this->gameState.playerSmallBlind].totalBet = smallBet;
+	this->playerStates[this->gameState.playerBigBlind].totalBet = bigBet;
+	this->playerStates[this->gameState.playerSmallBlind].isAllIn = smallBlindPlayer->chips == 0;
+	this->playerStates[this->gameState.playerBigBlind].isAllIn = bigBlindPlayer->chips == 0;
 }
 
-GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51)
+void GameSession::DistributePot()
 {
-	g_seed = time(NULL);
+}
 
+GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51), rand(), betAmount(0), playerStates()
+{
 	char index = 0;
 	for (char i = 2; i <= 14; ++i)
 	{
@@ -69,6 +75,7 @@ void GameSession::NewSession(Players players)
 	this->complete = false;
 	this->gameStatePrevious = this->gameState;
 	this->players = players;
+	this->betAmount = 0;
 
 	this->gameState.Reset();
 
@@ -78,12 +85,18 @@ void GameSession::NewSession(Players players)
 	char numPlaying = 0;
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
+		playerStates[i].Clear();
+
 		Player& p = players[i];
+
+		if (p.isActive)
+		{
+			p.Play();
+		}
 
 		if (p.isPlaying)
 		{
 			numPlaying++;
-			p.ClearHand();
 		}
 	}
 
@@ -92,68 +105,116 @@ void GameSession::NewSession(Players players)
 
 void GameSession::NextTurn()
 {
-	// Post blinds and Deal cards to all players.
-	if (this->gameState.currentTurnState == GameState::StreetStates::Deal)
+	switch (this->gameState.currentStreetState)
 	{
-		PostBlinds();
-
-		for (char i = 0; i < MAX_PLAYERS; ++i)
-		{
-			Player& p = players[i];
-
-			if (p.isPlaying)
-			{
-				GetCards(p.hand);
-			}
-		}
+		// Post blinds and Deal cards to all players.
+		case GameState::StreetStates::Deal:
+			PostBlinds();
+			DealCards();
+			break;
+		// Flop, move 3 cards from the deck to the table.
+		case GameState::StreetStates::Flop:
+			MoveCardsFromDeck(3, this->gameState.table);
+			this->gameState.numCards += 3;
+			break;
+		// Turn and river, move one card from the deck to the table.
+		case GameState::StreetStates::Turn:
+		case GameState::StreetStates::River:
+			MoveCardsFromDeck(1, this->gameState.table);
+			this->gameState.numCards += 1;
+		case GameState::StreetStates::End:
+			this->complete = true;
+			break;
+		default:
+			assert(false);
 	}
-	// Flop, move 3 cards from the deck to the table.
-	else if (this->gameState.currentTurnState == GameState::StreetStates::Flop)
-	{
-		MoveCardsFromDeck(3, this->gameState.table);
-		this->gameState.numCards += 3;
-	}
-	// Turn and river, move one card from the deck to the table.
-	else if (this->gameState.currentTurnState == GameState::StreetStates::Turn || this->gameState.currentTurnState == GameState::StreetStates::River)
-	{
-		MoveCardsFromDeck(1, this->gameState.table);
-		this->gameState.numCards += 1;
-	}
-	else if (this->gameState.currentTurnState == GameState::StreetStates::End)
-	{
-		this->complete = true;
-		return;
-	}
-	else
-	{
-		assert(false);
-	}
-
-	this->gameState.currentTurnState++;
 }
 
 void GameSession::HandlePlayerChoices()
 {
-	for (char i = 0; i < MAX_PLAYERS; ++i)
+	assert(this->gameState.numPlaying >= 2);
+
+	char startIndex = this->gameState.playerSmallBlind;
+	bool turnComplete = false;
+
+	while (!turnComplete)
 	{
-		Player& p = players[i];
+		// After we loop through each player, assume the turn is complete unless otherwise specified.
+		turnComplete = true;
 
-		if (p.isPlaying)
+		// Loop around the table asking for player choices, this is a critical loop, must be performant.
+		for (char i = startIndex; i < startIndex + MAX_PLAYERS; ++i)
 		{
-			Action::ActionType action = p.MakeChoice(this->gameState);
+			char index = i % MAX_PLAYERS;
 
-			if (this->gameState.currentTurnState == GameState::StreetStates::End)
+			Player& p = players[index];
+
+			if (p.isPlaying)
 			{
-				assert(action == Action::ActionType::NoAction);
-			}
-			else if (this->gameState.currentHandState == GameState::BetStates::NoBets)
-			{
-				assert(action == Action::ActionType::Bet || action == Action::ActionType::Check || action == Action::ActionType::Fold);
-			}
-			else if (this->gameState.currentHandState == GameState::BetStates::Bets)
-			{
-				assert(action == Action::ActionType::Call || action == Action::ActionType::Raise || action == Action::ActionType::Fold);
+				Action action;
+				p.MakeChoice(this->gameState, p.chips, action);
+				uint32_t bet = 0;
+
+				switch (this->gameState.currentStreetState)
+				{
+				case GameState::StreetStates::End:
+					assert(action.type == Action::ActionType::NoAction);
+					DistributePot();
+					turnComplete = true;
+					break;
+				case GameState::StreetStates::Deal:
+				case GameState::StreetStates::Flop:
+				case GameState::StreetStates::Turn:
+				case GameState::StreetStates::River:
+					switch (this->gameState.currentBetState)
+					{
+						case GameState::BetStates::NoBets:
+							assert(action.type == Action::ActionType::Bet || action.type == Action::ActionType::Check || action.type == Action::ActionType::Fold);
+							switch (action.type)
+							{
+								case Action::ActionType::Bet:
+									turnComplete = false;
+									bet = p.PlaceBet(gameState, action.amount);
+									playerStates[index].totalBet += bet;
+									this->betAmount += bet;
+									break;
+								case Action::ActionType::Check:
+									break;
+								case Action::ActionType::Fold:
+									p.Quit();
+									break;
+							}
+							break;
+						case GameState::BetStates::Bets:
+							assert(action.type == Action::ActionType::Call || action.type == Action::ActionType::Raise || action.type == Action::ActionType::Fold);
+							switch (action.type)
+							{
+								case Action::ActionType::Call:
+									if (playerStates[index].totalBet < this->betAmount && playerStates[index].isAllIn == false)
+									{
+										bet = p.PlaceBet(gameState, betAmount);
+										playerStates[index].totalBet += bet;
+									}
+									break;
+								case Action::ActionType::Raise:
+									turnComplete = false;
+									bet = p.PlaceBet(gameState, action.amount);
+									playerStates[index].totalBet += bet;
+									this->betAmount += bet;
+									break;
+								case Action::ActionType::Fold:
+									p.Quit();
+									break;
+							}
+							break;
+					}
+				}
+
+				playerStates[index].isAllIn = p.chips == 0;
 			}
 		}
 	}
+
+	this->gameState.currentStreetState++;
+	this->gameState.currentBetState = GameState::BetStates::NoBets;
 }

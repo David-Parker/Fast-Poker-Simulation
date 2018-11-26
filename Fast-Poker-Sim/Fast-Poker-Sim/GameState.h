@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <cassert>
 #include "Card.h"
 
 /* Represents the publically visible state of the game to all the players. */
@@ -10,8 +11,8 @@ public:
 	const enum StreetStates { Deal, Flop, Turn, River, End };
 	const enum BetStates { NoBets, Bets };
 
-	char currentTurnState;
-	char currentHandState;
+	char currentStreetState;
+	char currentBetState;
 	Card* table[5];
 	char numCards;
 	char numPlaying;
@@ -19,7 +20,7 @@ public:
 	char playerBigBlind;
 	char playerSmallBlind;
 
-	GameState() : currentTurnState(StreetStates::Deal), currentHandState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1) {}
+	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1) {}
 
 	inline void ClearTable()
 	{
@@ -31,14 +32,20 @@ public:
 		numCards = 0;
 	}
 
+	inline void AddToPot(uint32_t amount)
+	{
+		assert(amount > 0);
+		this->currentPot += amount;
+	}
+
 	inline void Reset()
 	{
-		this->currentTurnState = StreetStates::Deal;
-		this->currentHandState = BetStates::NoBets;
-		ClearTable();
+		this->currentStreetState = StreetStates::Deal;
+		this->currentBetState = BetStates::NoBets;
 		this->numPlaying = 0;
 		this->currentPot = 0;
 		this->playerBigBlind = 0;
 		this->playerSmallBlind = 0;
+		ClearTable();
 	}
 };

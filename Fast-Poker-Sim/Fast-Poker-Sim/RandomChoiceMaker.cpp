@@ -9,21 +9,21 @@ RandomChoiceMaker::~RandomChoiceMaker()
 {
 }
 
-Action::ActionType RandomChoiceMaker::MakeChoice(GameState& gameState)
+void RandomChoiceMaker::MakeChoice(GameState& gameState, uint32_t chipCount, Action& result)
 {
 	// Actions: Check, Call, Raise, Fold, NoAction (only for end state)
-	if (gameState.currentTurnState == GameState::StreetStates::End)
+	if (gameState.currentStreetState == GameState::StreetStates::End)
 	{
-		return Action::ActionType::NoAction;
+		result.type = Action::ActionType::NoAction;
 	}
-	else if (gameState.currentHandState == GameState::BetStates::NoBets)
+	else if (gameState.currentBetState == GameState::BetStates::NoBets)
 	{
 		// Bet, Check, Fold
-		return Action::ActionType::Fold;
+		result.type = Action::ActionType::Fold;
 	}
-	else if (gameState.currentHandState == GameState::BetStates::Bets)
+	else if (gameState.currentBetState == GameState::BetStates::Bets)
 	{
 		// Call, Raise, Fold
-		return Action::ActionType::Fold;
+		result.type = Action::ActionType::Fold;
 	}
 }

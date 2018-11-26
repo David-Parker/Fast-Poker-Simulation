@@ -121,12 +121,14 @@
   <ItemGroup>
     <ClInclude Include="Action.h" />
     <ClInclude Include="Card.h" />
+    <ClInclude Include="FastRand.h" />
     <ClInclude Include="GameConfiguration.h" />
     <ClInclude Include="GameSession.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="HoldEm.h" />
     <ClInclude Include="IChoiceMaker.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerState.h" />
     <ClInclude Include="RandomChoiceMaker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

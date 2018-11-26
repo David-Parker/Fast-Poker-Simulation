@@ -10,6 +10,6 @@ public:
 	RandomChoiceMaker();
 	~RandomChoiceMaker();
 
-	Action::ActionType MakeChoice(GameState& gameState) override;
+	void MakeChoice(GameState& gameState, uint32_t chipCount, Action& result) override;
 };
 

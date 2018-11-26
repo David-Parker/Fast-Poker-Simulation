@@ -6,5 +6,5 @@
 class IChoiceMaker
 {
 public:
-	virtual Action::ActionType MakeChoice(GameState& state) = 0;
+	virtual void MakeChoice(GameState& state, uint32_t chipCount, Action& result) = 0;
 };

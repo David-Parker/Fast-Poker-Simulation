@@ -16,15 +16,14 @@ public:
 	bool isPlaying;
 	char playerNum;
 	uint32_t chips;
-	Card* hand[2];
 
-	Player() : isActive(false), isPlaying(false), chips(0), hand() {}
+	Player() : isActive(false), isPlaying(false), chips(0) {}
 	~Player() {}
 
-	inline Action::ActionType MakeChoice(GameState& gameState)
+	inline void MakeChoice(GameState& gameState, uint32_t chipCount, Action& result)
 	{
 		assert(choiceMaker != nullptr);
-		return this->choiceMaker->MakeChoice(gameState);
+		this->choiceMaker->MakeChoice(gameState, chipCount, result);
 	}
 
 	inline void Activate(char playerNum, uint32_t chips, IChoiceMaker* choiceMaker)
@@ -50,27 +49,24 @@ public:
 		this->isPlaying = true;
 	}
 
-	inline void ClearHand()
-	{
-		hand[0] = nullptr;
-		hand[1] = nullptr;
-	}
-
 	inline void Quit()
 	{
 		assert(this->isActive == true);
 		this->isPlaying = false;
 	}
 
-	inline void PlaceBet(GameState& gameState, uint32_t amount)
+	// Returns the size of the actual bet.
+	inline uint32_t PlaceBet(GameState& gameState, uint32_t amount)
 	{
 		uint32_t chips = this->chips;
 		assert(this->chips > 0);
 		assert(this->isActive == true);
 		assert(this->isPlaying == true);
-		gameState.currentHandState = GameState::BetStates::Bets;
+		assert(amount > 0);
+		gameState.currentBetState = GameState::BetStates::Bets;
 		uint32_t actualBet = amount > chips ? chips : amount;
-		gameState.currentPot += actualBet;
+		gameState.AddToPot(actualBet);
 		this->chips -= actualBet;
+		return actualBet;
 	}
 };
