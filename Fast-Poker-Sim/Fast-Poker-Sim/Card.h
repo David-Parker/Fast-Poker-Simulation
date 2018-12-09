@@ -13,19 +13,22 @@ struct Card
 	const static char Diamonds = 3;
 	const static char Clubs = 4;
 
-	char value; // J = 11, Q = 12, K = 13, A = 14
-	char rank; // 1 = Spades, 2 = Hearts, 3 = Diamonds, 4 = Clubs
+	static char* ranks[14];
+	static char* suits[4];
 
-	Card() : value(0), rank(0) {}
+	char rank; // J = 11, Q = 12, K = 13, A = 14
+	char suit; // 1 = Spades, 2 = Hearts, 3 = Diamonds, 4 = Clubs
+
+	Card() : rank(0), suit(0) {}
 
 	inline static void Swap(Card* a, Card* b)
 	{
-		char tempRank = a->rank;
-		char tempValue = a->value;
+		char tempRank = a->suit;
+		char tempValue = a->rank;
+		a->suit = b->suit;
 		a->rank = b->rank;
-		a->value = b->value;
-		b->rank = tempRank;
-		b->value = tempValue;
+		b->suit = tempRank;
+		b->rank = tempValue;
 	}
 
 	inline void Assign(char value, char rank)
@@ -35,7 +38,7 @@ struct Card
 		assert(rank >= 1);
 		assert(rank <= 4);
 
-		this->value = value;
-		this->rank = rank;
+		this->rank = value;
+		this->suit = rank;
 	}
 };

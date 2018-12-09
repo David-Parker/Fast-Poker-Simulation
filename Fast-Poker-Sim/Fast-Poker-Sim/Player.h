@@ -4,6 +4,7 @@
 #include "Card.h"
 #include "GameState.h"
 #include "IChoiceMaker.h"
+#include "Logger.h"
 
 /* Represents a player in Texas Hold 'Em */
 class Player
@@ -24,6 +25,7 @@ public:
 	{
 		assert(choiceMaker != nullptr);
 		this->choiceMaker->MakeChoice(gameState, chipCount, result);
+		log("Player %d %s.\n", this->playerNum, Action::actions[result.type]);
 	}
 
 	inline void Activate(char playerNum, uint32_t chips, IChoiceMaker* choiceMaker)
@@ -67,6 +69,8 @@ public:
 		uint32_t actualBet = amount > chips ? chips : amount;
 		gameState.AddToPot(actualBet);
 		this->chips -= actualBet;
+
+		log("Player %d placed bet %d.\n", this->playerNum, actualBet);
 		return actualBet;
 	}
 };

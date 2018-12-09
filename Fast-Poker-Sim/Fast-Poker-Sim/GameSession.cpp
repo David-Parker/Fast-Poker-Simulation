@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Action.h"
 #include "GameSession.h"
+#include "Logger.h"
 
 void GameSession::PostBlinds()
 {
@@ -72,6 +73,7 @@ GameSession::~GameSession()
 
 void GameSession::NewSession(Players players)
 {
+	log("New Session\n");
 	this->complete = false;
 	this->gameStatePrevious = this->gameState;
 	this->players = players;

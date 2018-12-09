@@ -2,7 +2,7 @@
 #include <iostream>
 #include "HoldEm.h"
 
-int main()
+int main(int argc, char** argv)
 {
 	HoldEm game(8);
 	int gamesPlayed = 0;
@@ -18,8 +18,5 @@ int main()
 		}*/
 	}
 
-	std::cout << "Done.";
-
-	getchar();
 	return 0;
 }

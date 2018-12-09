@@ -1,6 +1,7 @@
 #include <cassert>
 #include "HoldEm.h"
 #include "RandomChoiceMaker.h"
+#include "Logger.h"
 
 void HoldEm::RemoveLosingPlayers()
 {
@@ -14,6 +15,7 @@ void HoldEm::RemoveLosingPlayers()
 
 			if (p.chips == 0)
 			{
+				log("Player %d was eliminated.\n", i);
 				RemovePlayer(i);
 			}
 		}
@@ -37,6 +39,7 @@ HoldEm::~HoldEm()
 
 void HoldEm::Start()
 {
+	log("Starting game\n");
 	assert(this->isPlaying == false);
 	this->isPlaying = true;
 	this->session.NewSession(this->players);
@@ -44,6 +47,7 @@ void HoldEm::Start()
 
 void HoldEm::Stop()
 {
+	log("Game stopped\n");
 	assert(this->isPlaying == true);
 	this->isPlaying = false;
 	this->session.complete = true;

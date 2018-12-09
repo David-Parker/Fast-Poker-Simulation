@@ -41,6 +41,9 @@ private:
 			if (p.isPlaying)
 			{
 				GetCards(playerStates[i].hand);
+				Card* c1 = playerStates[i].hand[0];
+				Card* c2 = playerStates[i].hand[1];
+				log("Player %d was dealt %s of %s and %s of %s.\n", i, Card::ranks[c1->rank - 1], Card::suits[c1->suit - 1], Card::ranks[c2->rank - 1], Card::suits[c2->suit - 1]);
 			}
 		}
 	}

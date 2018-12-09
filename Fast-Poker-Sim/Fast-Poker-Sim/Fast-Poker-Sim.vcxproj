@@ -112,6 +112,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Action.cpp" />
+    <ClCompile Include="Card.cpp" />
     <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HoldEm.cpp" />
     <ClCompile Include="main.cpp" />
@@ -127,6 +129,7 @@
     <ClInclude Include="GameState.h" />
     <ClInclude Include="HoldEm.h" />
     <ClInclude Include="IChoiceMaker.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerState.h" />
     <ClInclude Include="RandomChoiceMaker.h" />
