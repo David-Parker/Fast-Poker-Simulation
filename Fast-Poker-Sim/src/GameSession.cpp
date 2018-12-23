@@ -4,6 +4,7 @@
 #include "Action.h"
 #include "GameSession.h"
 #include "Logger.h"
+#include "SevenEval.h"
 
 void GameSession::PostBlinds()
 {
