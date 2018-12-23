@@ -3,6 +3,7 @@
 #include "Action.h"
 #include "Card.h"
 #include "GameState.h"
+#include "PlayerState.h"
 #include "IChoiceMaker.h"
 #include "Logger.h"
 
@@ -21,10 +22,10 @@ public:
 	Player() : isActive(false), isPlaying(false), chips(0) {}
 	~Player() {}
 
-	inline void MakeChoice(GameState& gameState, uint32_t chipCount, Action& result)
+	inline void MakeChoice(const GameState& gameState, uint32_t chipCount, Action& result, const PlayerState& playerState)
 	{
 		assert(choiceMaker != nullptr);
-		this->choiceMaker->MakeChoice(gameState, chipCount, result);
+		this->choiceMaker->MakeChoice(gameState, chipCount, result, playerState);
 		log("Player %d %s.\n", this->playerNum, Action::actions[result.type]);
 	}
 
@@ -58,7 +59,7 @@ public:
 	}
 
 	// Returns the size of the actual bet.
-	inline uint32_t PlaceBet(GameState& gameState, uint32_t amount)
+	inline uint32_t PlaceBet(GameState& gameState, uint32_t amount, bool& isAllIn)
 	{
 		uint32_t chips = this->chips;
 		assert(this->chips > 0);
@@ -70,7 +71,14 @@ public:
 		gameState.AddToPot(actualBet);
 		this->chips -= actualBet;
 
-		log("Player %d placed bet %d.\n", this->playerNum, actualBet);
+		log("Player %d placed bet %d. (Total Pot: %d).\n", this->playerNum, actualBet, gameState.currentPot);
+
+		if (this->chips == 0)
+		{
+			log("Player %d is all in.\n", this->playerNum);
+			isAllIn = true;
+		}
+
 		return actualBet;
 	}
 };

@@ -67,7 +67,11 @@ bool HoldEm::Update(int& gamesPlayed)
 	else
 	{
 		this->session.NextTurn();
-		this->session.HandlePlayerChoices();
+
+		if (!this->session.complete)
+		{
+			this->session.HandlePlayerChoices();
+		}
 	}
 
 	if (this->numPlayers < 2)

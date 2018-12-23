@@ -42,20 +42,30 @@ void GameSession::PostBlinds()
 	assert(smallBlindPlayer->chips > 0);
 
 	// Make big and small blind players bet.
-	uint32_t smallBet = smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND);
-	uint32_t bigBet = bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND);
-	this->betAmount = BIG_BLIND;
+	uint32_t smallBet = smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND, this->playerStates[this->gameState.playerSmallBlind].isAllIn);
+	uint32_t bigBet = bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND, this->playerStates[this->gameState.playerBigBlind].isAllIn);
+	this->gameState.betAmount = BIG_BLIND;
 	this->playerStates[this->gameState.playerSmallBlind].totalBet = smallBet;
 	this->playerStates[this->gameState.playerBigBlind].totalBet = bigBet;
-	this->playerStates[this->gameState.playerSmallBlind].isAllIn = smallBlindPlayer->chips == 0;
-	this->playerStates[this->gameState.playerBigBlind].isAllIn = bigBlindPlayer->chips == 0;
 }
 
 void GameSession::DistributePot()
 {
+	for (char i = 0; i < MAX_PLAYERS; ++i)
+	{
+		Player& p = players[i];
+
+		if (p.isPlaying)
+		{
+			// find the player(s) with the best 5 card hand.
+			p.chips += this->gameState.currentPot;
+			log("Player %i won %d.\n", i, this->gameState.currentPot);
+			break;
+		}
+	}
 }
 
-GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51), rand(), betAmount(0), playerStates()
+GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51), rand(), playerStates()
 {
 	char index = 0;
 	for (char i = 2; i <= 14; ++i)
@@ -77,7 +87,6 @@ void GameSession::NewSession(Players players)
 	this->complete = false;
 	this->gameStatePrevious = this->gameState;
 	this->players = players;
-	this->betAmount = 0;
 
 	this->gameState.Reset();
 
@@ -94,6 +103,7 @@ void GameSession::NewSession(Players players)
 		if (p.isActive)
 		{
 			p.Play();
+			log("Player %d has %d chips.\n", p.playerNum, p.chips);
 		}
 
 		if (p.isPlaying)
@@ -107,6 +117,13 @@ void GameSession::NewSession(Players players)
 
 void GameSession::NextTurn()
 {
+	this->gameState.betAmount = 0;
+
+	if (this->gameState.numPlaying == 1)
+	{
+		this->gameState.currentStreetState = GameState::StreetStates::End;
+	}
+
 	switch (this->gameState.currentStreetState)
 	{
 		// Post blinds and Deal cards to all players.
@@ -125,6 +142,7 @@ void GameSession::NextTurn()
 			MoveCardsFromDeck(1, this->gameState.table);
 			this->gameState.numCards += 1;
 		case GameState::StreetStates::End:
+			DistributePot();
 			this->complete = true;
 			break;
 		default:
@@ -134,7 +152,7 @@ void GameSession::NextTurn()
 
 void GameSession::HandlePlayerChoices()
 {
-	assert(this->gameState.numPlaying >= 2);
+	assert(this->gameState.numPlaying >= 1);
 
 	char startIndex = this->gameState.playerSmallBlind;
 	bool turnComplete = false;
@@ -153,15 +171,20 @@ void GameSession::HandlePlayerChoices()
 
 			if (p.isPlaying)
 			{
+				// All other players folded, end the game and distribute the winnings.
+				if (this->gameState.numPlaying == 1)
+				{
+					this->gameState.currentStreetState = GameState::StreetStates::End;
+				}
+
 				Action action;
-				p.MakeChoice(this->gameState, p.chips, action);
+				p.MakeChoice(this->gameState, p.chips, action, playerStates[index]);
 				uint32_t bet = 0;
 
 				switch (this->gameState.currentStreetState)
 				{
 				case GameState::StreetStates::End:
 					assert(action.type == Action::ActionType::NoAction);
-					DistributePot();
 					turnComplete = true;
 					break;
 				case GameState::StreetStates::Deal:
@@ -171,52 +194,61 @@ void GameSession::HandlePlayerChoices()
 					switch (this->gameState.currentBetState)
 					{
 						case GameState::BetStates::NoBets:
-							assert(action.type == Action::ActionType::Bet || action.type == Action::ActionType::Check || action.type == Action::ActionType::Fold);
+							assert(action.type == Action::ActionType::Bet || action.type == Action::ActionType::Check || action.type == Action::ActionType::Fold || action.type == Action::ActionType::NoAction);
 							switch (action.type)
 							{
 								case Action::ActionType::Bet:
 									turnComplete = false;
-									bet = p.PlaceBet(gameState, action.amount);
+									bet = p.PlaceBet(gameState, action.amount, playerStates[index].isAllIn);
 									playerStates[index].totalBet += bet;
-									this->betAmount += bet;
+									gameState.betAmount = bet;
 									break;
 								case Action::ActionType::Check:
 									break;
 								case Action::ActionType::Fold:
 									p.Quit();
+									this->gameState.numPlaying--;
+									break;
+								case Action::ActionType::NoAction:
 									break;
 							}
 							break;
 						case GameState::BetStates::Bets:
-							assert(action.type == Action::ActionType::Call || action.type == Action::ActionType::Raise || action.type == Action::ActionType::Fold);
+							assert(action.type == Action::ActionType::Call || action.type == Action::ActionType::Raise || action.type == Action::ActionType::Fold || action.type == Action::ActionType::NoAction);
 							switch (action.type)
 							{
 								case Action::ActionType::Call:
-									if (playerStates[index].totalBet < this->betAmount && playerStates[index].isAllIn == false)
+									if (playerStates[index].totalBet < this->gameState.betAmount && playerStates[index].isAllIn == false)
 									{
-										bet = p.PlaceBet(gameState, betAmount);
+										bet = p.PlaceBet(gameState, this->gameState.betAmount - playerStates[index].totalBet, playerStates[index].isAllIn);
 										playerStates[index].totalBet += bet;
 									}
 									break;
 								case Action::ActionType::Raise:
 									turnComplete = false;
-									bet = p.PlaceBet(gameState, action.amount);
+									bet = p.PlaceBet(gameState, action.amount, playerStates[index].isAllIn);
 									playerStates[index].totalBet += bet;
-									this->betAmount += bet;
+									assert(bet > 0);
+									gameState.betAmount = bet;
 									break;
 								case Action::ActionType::Fold:
 									p.Quit();
+									this->gameState.numPlaying--;
+									break;
+								case Action::ActionType::NoAction:
 									break;
 							}
 							break;
 					}
 				}
-
-				playerStates[index].isAllIn = p.chips == 0;
 			}
 		}
 	}
 
-	this->gameState.currentStreetState++;
+	if (this->gameState.currentStreetState < GameState::StreetStates::End)
+	{
+		this->gameState.currentStreetState++;
+	}
+
 	this->gameState.currentBetState = GameState::BetStates::NoBets;
 }

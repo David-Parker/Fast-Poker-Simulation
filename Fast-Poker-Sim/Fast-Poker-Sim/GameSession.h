@@ -19,7 +19,6 @@ private:
 	char topOfDeck;
 	Player* players;
 	PlayerState playerStates[MAX_PLAYERS];
-	uint32_t betAmount;
 	FastRand rand;
 
 	inline void ShuffleDeck()

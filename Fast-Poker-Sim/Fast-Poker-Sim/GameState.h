@@ -19,8 +19,9 @@ public:
 	uint32_t currentPot;
 	char playerBigBlind;
 	char playerSmallBlind;
+	uint32_t betAmount;
 
-	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1) {}
+	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1), betAmount(0) {}
 
 	inline void ClearTable()
 	{
@@ -46,6 +47,7 @@ public:
 		this->currentPot = 0;
 		this->playerBigBlind = 0;
 		this->playerSmallBlind = 0;
+		this->betAmount = 0;
 		ClearTable();
 	}
 };
