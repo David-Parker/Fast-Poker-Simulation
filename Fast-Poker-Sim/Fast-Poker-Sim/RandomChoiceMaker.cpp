@@ -20,7 +20,8 @@ void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCoun
 		result.type = Action::ActionType::NoAction;
 		return;
 	}
-	else if (gameState.currentBetState == GameState::BetStates::NoBets)
+
+	if (gameState.currentBetState == GameState::BetStates::NoBets)
 	{
 		// Bet, Check, Fold
 		int prob = rand.Rand() % 3;
@@ -45,6 +46,13 @@ void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCoun
 	}
 	else if (gameState.currentBetState == GameState::BetStates::Bets)
 	{
+		// Player does not need to call, has already bet the maximum.
+		if (gameState.betAmount == playerState.totalBet)
+		{
+			result.type = Action::ActionType::NoAction;
+			return;
+		}
+
 		if (gameState.betAmount >= chipCount)
 		{
 			// Call, Fold

@@ -51,6 +51,11 @@ void GameSession::PostBlinds()
 
 void GameSession::DistributePot()
 {
+	if (gameState.numPlaying > 1)
+	{
+		log("Went all the way.\n");
+	}
+
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
 		Player& p = players[i];
@@ -119,6 +124,11 @@ void GameSession::NextTurn()
 {
 	this->gameState.betAmount = 0;
 
+	for (char i = 0; i < MAX_PLAYERS; ++i)
+	{
+		this->playerStates[i].ClearBet();
+	}
+
 	if (this->gameState.numPlaying == 1)
 	{
 		this->gameState.currentStreetState = GameState::StreetStates::End;
@@ -128,20 +138,30 @@ void GameSession::NextTurn()
 	{
 		// Post blinds and Deal cards to all players.
 		case GameState::StreetStates::Deal:
+			log("Posting blinds.\n");
 			PostBlinds();
+			log("Dealing.\n");
 			DealCards();
 			break;
 		// Flop, move 3 cards from the deck to the table.
 		case GameState::StreetStates::Flop:
+			log("Flop.\n");
 			MoveCardsFromDeck(3, this->gameState.table);
 			this->gameState.numCards += 3;
 			break;
 		// Turn and river, move one card from the deck to the table.
 		case GameState::StreetStates::Turn:
-		case GameState::StreetStates::River:
+			log("Turn.\n");
 			MoveCardsFromDeck(1, this->gameState.table);
 			this->gameState.numCards += 1;
+			break;
+		case GameState::StreetStates::River:
+			log("River.\n");
+			MoveCardsFromDeck(1, this->gameState.table);
+			this->gameState.numCards += 1;
+			break;
 		case GameState::StreetStates::End:
+			log("Ending of play.\n");
 			DistributePot();
 			this->complete = true;
 			break;

@@ -15,4 +15,9 @@ struct PlayerState
 		totalBet = 0;
 		isAllIn = false;
 	}
+
+	inline void ClearBet()
+	{
+		totalBet = 0;
+	}
 };
