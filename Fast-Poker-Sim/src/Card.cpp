@@ -1,4 +1,3 @@
 #include "Card.h"
 
-char* Card::ranks[14] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
-char* Card::suits[4] = { "Spades", "Hearts", "Diamonds", "Clubs" };
+char* Card::cards[52] = { "ACE of SPADE","ACE of HEART","ACE of DIAMOND","ACE of CLUB","KING of SPADE","KING of HEART","KING of DIAMOND","KING of CLUB","QUEEN of SPADE","QUEEN of HEART","QUEEN of DIAMOND","QUEEN of CLUB","JACK of SPADE","JACK of HEART","JACK of DIAMOND","JACK of CLUB","TEN of SPADE","TEN of HEART","TEN of DIAMOND","TEN of CLUB","NINE of SPADE","NINE of HEART","NINE of DIAMOND","NINE of CLUB","EIGHT of SPADE","EIGHT of HEART","EIGHT of DIAMOND","EIGHT of CLUB","SEVEN of SPADE","SEVEN of HEART","SEVEN of DIAMOND","SEVEN of CLUB","SIX of SPADE","SIX of HEART","SIX of DIAMOND","SIX of CLUB","FIVE of SPADE","FIVE of HEART","FIVE of DIAMOND","FIVE of CLUB","FOUR of SPADE","FOUR of HEART","FOUR of DIAMOND","FOUR of CLUB","THREE of SPADE","THREE of HEART","THREE of DIAMOND","THREE of CLUB","TWO of SPADE","TWO of HEART","TWO of DIAMOND","TWO of CLUB" };

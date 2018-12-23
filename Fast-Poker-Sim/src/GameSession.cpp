@@ -74,12 +74,9 @@ void GameSession::DistributePot()
 GameSession::GameSession() : deck(), complete(false), gameState(), gameStatePrevious(), players(), topOfDeck(51), rand(), playerStates()
 {
 	char index = 0;
-	for (char i = 2; i <= 14; ++i)
+	for (char i = 0; i < 52; ++i)
 	{
-		for (char j = 1; j <= 4; ++j)
-		{
-			deck[index++].Assign(i, j);
-		}
+		deck[index++].Assign(i);
 	}
 }
 
