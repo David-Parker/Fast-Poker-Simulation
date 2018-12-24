@@ -22,19 +22,29 @@ void HoldEm::RemoveLosingPlayers()
 	}
 }
 
-HoldEm::HoldEm(char numPlayers) : numPlayers(), isPlaying(false), players(), session()
+HoldEm::HoldEm(char numPlayers) : numPlayingPlayers(), totalPlayers(numPlayers), isPlaying(false), players(), session()
 {
-	assert(numPlayers >= 2);
-	assert(numPlayers <= MAX_PLAYERS);
-
-	for (char i = 0; i < numPlayers; ++i)
-	{
-		AddPlayer();
-	}
+	assert(totalPlayers >= 2);
+	assert(totalPlayers <= MAX_PLAYERS);
 }
 
 HoldEm::~HoldEm()
 {
+}
+
+void HoldEm::NewGame()
+{
+	numPlayingPlayers = 0;
+
+	for (char i = 0; i < MAX_PLAYERS; ++i)
+	{
+		players[i].Deactivate();
+	}
+
+	for (char i = 0; i < this->totalPlayers; ++i)
+	{
+		AddPlayer();
+	}
 }
 
 void HoldEm::Start()
@@ -74,7 +84,7 @@ bool HoldEm::Update(int& gamesPlayed)
 		}
 	}
 
-	if (this->numPlayers < 2)
+	if (this->numPlayingPlayers < 2)
 	{
 		Stop();
 	}
@@ -84,7 +94,7 @@ bool HoldEm::Update(int& gamesPlayed)
 
 char HoldEm::AddPlayer()
 {
-	assert(this->numPlayers < MAX_PLAYERS);
+	assert(this->numPlayingPlayers < MAX_PLAYERS);
 
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
@@ -94,7 +104,7 @@ char HoldEm::AddPlayer()
 		{
 			p.Activate(i, STARTING_CHIPS, new RandomChoiceMaker());
 			p.Play();
-			this->numPlayers++;
+			this->numPlayingPlayers++;
 			return i;
 		}
 	}
@@ -105,10 +115,10 @@ char HoldEm::AddPlayer()
 
 void HoldEm::RemovePlayer(char player)
 {
-	assert(this->numPlayers > 0);
+	assert(this->numPlayingPlayers > 0);
 	assert(player < MAX_PLAYERS);
 	assert(player >= 0);
 
 	this->players[player].Deactivate();
-	this->numPlayers--;
+	this->numPlayingPlayers--;
 }

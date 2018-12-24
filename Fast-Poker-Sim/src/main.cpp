@@ -6,15 +6,14 @@ int main(int argc, char** argv)
 {
 	HoldEm game(4);
 	int gamesPlayed = 0;
-	game.Start();
 
-	// game loop
-	while (game.Update(gamesPlayed))
+	for (int i = 0; i < 1; ++i)
 	{
-		//std::cout << gamesPlayed << std::endl;
-		if (gamesPlayed == 1000)
+		game.NewGame();
+		game.Start();
+
+		while (game.Update(gamesPlayed))
 		{
-			break;
 		}
 	}
 

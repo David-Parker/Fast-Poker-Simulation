@@ -2,6 +2,7 @@
 #include <vector>
 #include <cassert>
 #include "Card.h"
+#include "GameConfiguration.h"
 
 /* Represents the publically visible state of the game to all the players. */
 struct GameState
@@ -16,12 +17,13 @@ public:
 	Card* table[5];
 	char numCards;
 	char numPlaying;
-	uint32_t currentPot;
+	char currentPot;
+	uint32_t pots[MAX_PLAYERS];
 	char playerBigBlind;
 	char playerSmallBlind;
 	uint32_t betAmount;
 
-	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1), betAmount(0) {}
+	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1), betAmount(0), pots() {}
 
 	inline void ClearTable()
 	{
@@ -36,7 +38,7 @@ public:
 	inline void AddToPot(uint32_t amount)
 	{
 		assert(amount > 0);
-		this->currentPot += amount;
+		this->pots[this->currentPot] += amount;
 	}
 
 	inline void Reset()
@@ -48,6 +50,12 @@ public:
 		this->playerBigBlind = 0;
 		this->playerSmallBlind = 0;
 		this->betAmount = 0;
+
+		for (char i = 0; i < MAX_PLAYERS; ++i)
+		{
+			pots[i] = 0;
+		}
+
 		ClearTable();
 	}
 };

@@ -19,7 +19,7 @@ public:
 	char playerNum;
 	uint32_t chips;
 
-	Player() : isActive(false), isPlaying(false), chips(0) {}
+	Player() : isActive(false), isPlaying(false), chips(0), choiceMaker(nullptr) {}
 	~Player() {}
 
 	inline void MakeChoice(const GameState& gameState, uint32_t chipCount, Action& result, const PlayerState& playerState)
@@ -42,7 +42,12 @@ public:
 	{
 		this->isActive = false;
 		this->isPlaying = false;
-		delete this->choiceMaker;
+
+		if (this->choiceMaker != nullptr)
+		{
+			delete this->choiceMaker;
+			this->choiceMaker = nullptr;
+		}
 	}
 
 	inline void Play()
@@ -68,10 +73,10 @@ public:
 		assert(amount > 0);
 		gameState.currentBetState = GameState::BetStates::Bets;
 		uint32_t actualBet = amount > chips ? chips : amount;
-		gameState.AddToPot(actualBet);
+		//gameState.AddToPot(actualBet);
 		this->chips -= actualBet;
 
-		log("Player %d placed bet %d. (Total Pot: %d).\n", this->playerNum, actualBet, gameState.currentPot);
+		log("Player %d placed bet %d.\n", this->playerNum, actualBet);
 
 		if (this->chips == 0)
 		{

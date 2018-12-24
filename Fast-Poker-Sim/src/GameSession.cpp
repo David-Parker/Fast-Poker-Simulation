@@ -52,21 +52,83 @@ void GameSession::PostBlinds()
 
 void GameSession::DistributePot()
 {
-	if (gameState.numPlaying > 1)
-	{
-		log("Went all the way.\n");
-	}
+	assert(gameState.numPlaying > 0);
 
+	uint16_t maxValue = 0;
+	Player* winner = nullptr;
+
+	// Calculate the hand ranks for each player
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
 		Player& p = players[i];
 
 		if (p.isPlaying)
 		{
-			// find the player(s) with the best 5 card hand.
-			p.chips += this->gameState.currentPot;
-			log("Player %i won %d.\n", i, this->gameState.currentPot);
-			break;
+			// The game did not complete, one winner who did not fold.
+			if (gameState.numPlaying == 1)
+			{
+				playerStates[i].handRank = 1;
+			}
+			else
+			{
+				playerStates[i].handRank = SevenEval::GetRank(this->gameState.table[0]->val, this->gameState.table[1]->val, this->gameState.table[2]->val,
+					this->gameState.table[3]->val, this->gameState.table[4]->val, this->playerStates[i].hand[0]->val, this->playerStates[i].hand[1]->val);
+			}
+		}
+		else
+		{
+			playerStates[i].handRank = 0;
+		}
+	}
+
+	// Calculate the winner for each pot.
+	for (char i = 0; i < MAX_PLAYERS; ++i)
+	{
+		if (this->gameState.pots[i] > 0)
+		{
+			uint16_t maxValue = 0;
+			char numWinners = 0;
+
+			// Caculate the max
+			for (char j = 0; j < MAX_PLAYERS; ++j)
+			{
+				PlayerState& state = playerStates[j];
+
+				// Player is in this pot
+				if (state.potNum >= i)
+				{
+					if (state.handRank > maxValue)
+					{
+						numWinners = 1;
+						maxValue = state.handRank;
+					}
+					else if (state.handRank == maxValue)
+					{
+						numWinners++;
+					}
+				}
+			}
+
+			uint32_t extra = this->gameState.pots[i] % numWinners;
+			uint32_t split = this->gameState.pots[i] / numWinners;
+
+			for (char j = 0; j < MAX_PLAYERS; ++j)
+			{
+				assert(numWinners > 0);
+				PlayerState& state = playerStates[j];
+
+				// Player is in this pot
+				if (state.potNum >= i)
+				{
+					if (state.handRank == maxValue)
+					{
+						uint32_t winnings = split + extra;
+						players[j].chips += winnings;
+						log("Player %d won %d from pot %d.\n", players[j].playerNum, winnings, i);
+						extra = 0;
+					}
+				}
+			}
 		}
 	}
 }
@@ -97,6 +159,7 @@ void GameSession::NewSession(Players players)
 	ShuffleDeck();
 
 	char numPlaying = 0;
+	uint32_t totalChips = 0;
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
 		playerStates[i].Clear();
@@ -107,6 +170,7 @@ void GameSession::NewSession(Players players)
 		{
 			p.Play();
 			log("Player %d has %d chips.\n", p.playerNum, p.chips);
+			totalChips += p.chips;
 		}
 
 		if (p.isPlaying)
@@ -114,6 +178,8 @@ void GameSession::NewSession(Players players)
 			numPlaying++;
 		}
 	}
+
+	log("Total chips in play: %d.\n", totalChips);
 
 	this->gameState.numPlaying = numPlaying;
 }
@@ -124,7 +190,8 @@ void GameSession::NextTurn()
 
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
-		this->playerStates[i].ClearBet();
+		assert(this->playerStates[i].totalBet == 0);
+		//this->playerStates[i].ClearBet();
 	}
 
 	if (this->gameState.numPlaying == 1)
@@ -144,18 +211,21 @@ void GameSession::NextTurn()
 		// Flop, move 3 cards from the deck to the table.
 		case GameState::StreetStates::Flop:
 			log("Flop.\n");
-			MoveCardsFromDeck(3, this->gameState.table);
+			MoveCardsFromDeck(3, &this->gameState.table[0]);
+			log("Table flopped %s, %s, and %s.\n", Card::cards[this->gameState.table[0]->val], Card::cards[this->gameState.table[1]->val], Card::cards[this->gameState.table[2]->val]);
 			this->gameState.numCards += 3;
 			break;
 		// Turn and river, move one card from the deck to the table.
 		case GameState::StreetStates::Turn:
 			log("Turn.\n");
-			MoveCardsFromDeck(1, this->gameState.table);
+			MoveCardsFromDeck(1, &this->gameState.table[3]);
+			log("Table turned %s.\n", Card::cards[this->gameState.table[3]->val]);
 			this->gameState.numCards += 1;
 			break;
 		case GameState::StreetStates::River:
 			log("River.\n");
-			MoveCardsFromDeck(1, this->gameState.table);
+			MoveCardsFromDeck(1, &this->gameState.table[4]);
+			log("Table rivered %s.\n", Card::cards[this->gameState.table[4]->val]);
 			this->gameState.numCards += 1;
 			break;
 		case GameState::StreetStates::End:
@@ -236,11 +306,8 @@ void GameSession::HandlePlayerChoices()
 							switch (action.type)
 							{
 								case Action::ActionType::Call:
-									if (playerStates[index].totalBet < this->gameState.betAmount && playerStates[index].isAllIn == false)
-									{
-										bet = p.PlaceBet(gameState, this->gameState.betAmount - playerStates[index].totalBet, playerStates[index].isAllIn);
-										playerStates[index].totalBet += bet;
-									}
+									bet = p.PlaceBet(gameState, this->gameState.betAmount - playerStates[index].totalBet, playerStates[index].isAllIn);
+									playerStates[index].totalBet += bet;
 									break;
 								case Action::ActionType::Raise:
 									turnComplete = false;
@@ -259,6 +326,59 @@ void GameSession::HandlePlayerChoices()
 							break;
 					}
 				}
+			}
+		}
+	}
+
+	if (gameState.betAmount > 0)
+	{
+		for (char i = 0; i < MAX_PLAYERS; ++i)
+		{
+			PlayerState& state = playerStates[i];
+
+			if (state.totalBet > 0)
+			{
+				log("Player %d had a total bet of %d.\n", i, state.totalBet);
+			}
+		}
+
+		for (char i = 0; i < MAX_PLAYERS; ++i)
+		{
+			uint32_t min = UINT32_MAX;
+			char minPlayer = -1;
+			for (char j = 0; j < MAX_PLAYERS; ++j)
+			{
+				uint32_t bet = playerStates[j].totalBet;
+
+				if (bet > 0 && bet < min)
+				{
+					min = bet;
+					minPlayer = j;
+				}
+			}
+
+			if (min == UINT32_MAX)
+			{
+				break;
+			}
+
+			for (char i = 0; i < MAX_PLAYERS; ++i)
+			{
+				PlayerState& state = playerStates[i];
+
+				if (state.totalBet > 0)
+				{
+					state.potNum++;
+					this->gameState.pots[this->gameState.currentPot] += min;
+					state.totalBet -= min;
+				}
+			}
+
+			assert(minPlayer > -1);
+
+			if (this->playerStates[minPlayer].isAllIn)
+			{
+				this->gameState.currentPot++;
 			}
 		}
 	}

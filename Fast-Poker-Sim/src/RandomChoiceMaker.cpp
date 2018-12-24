@@ -15,7 +15,7 @@ RandomChoiceMaker::~RandomChoiceMaker()
 void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount, Action& result, const PlayerState& playerState)
 {
 	// Actions: Check, Call, Raise, Fold, NoAction (only for end state)
-	if (gameState.currentStreetState == GameState::StreetStates::End || playerState.isAllIn == true)
+	if (gameState.currentStreetState == GameState::StreetStates::End || playerState.isAllIn == true || gameState.numPlaying == 1)
 	{
 		result.type = Action::ActionType::NoAction;
 		return;
@@ -85,10 +85,10 @@ void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCoun
 				result.type = Action::ActionType::Call;
 				break;
 			case 1:
-				assert(chipCount > 0);
+				assert(chipCount > 0 && chipCount > gameState.betAmount);
 				result.type = Action::ActionType::Raise;
 				maxRaise = chipCount - gameState.betAmount;
-				result.amount = maxRaise;
+				result.amount = gameState.betAmount + (rand.Rand() % maxRaise);
 				break;
 			case 2:
 				result.type = Action::ActionType::Fold;

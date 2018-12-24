@@ -9,7 +9,8 @@ class HoldEm
 {
 private:
 	bool isPlaying;
-	char numPlayers;
+	char totalPlayers;
+	char numPlayingPlayers;
 	Player players[MAX_PLAYERS];
 	GameSession session;
 
@@ -19,6 +20,7 @@ public:
 	HoldEm(char numPlayers);
 	~HoldEm();
 
+	void NewGame();
 	void Start();
 	void Stop();
 
