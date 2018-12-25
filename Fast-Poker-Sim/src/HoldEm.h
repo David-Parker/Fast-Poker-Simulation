@@ -24,7 +24,7 @@ public:
 	void Start();
 	void Stop();
 
-	bool Update(int& gamesPlayed);
+	bool Update(uint64_t& gamesPlayed);
 	char AddPlayer();
 	void RemovePlayer(char player);
 };

@@ -12,7 +12,7 @@ RandomChoiceMaker::~RandomChoiceMaker()
 {
 }
 
-void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount, Action& result, const PlayerState& playerState)
+void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount, Action& result, const PlayerState& playerState, const Player& player)
 {
 	// Actions: Check, Call, Raise, Fold, NoAction (only for end state)
 	if (gameState.currentStreetState == GameState::StreetStates::End || playerState.isAllIn == true || gameState.numPlaying == 1)
@@ -46,8 +46,8 @@ void RandomChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCoun
 	}
 	else if (gameState.currentBetState == GameState::BetStates::Bets)
 	{
-		// Player does not need to call, has already bet the maximum.
-		if (gameState.betAmount == playerState.totalBet)
+		// Player does not need to call, has already bet the maximum. Never call yourself.
+		if (gameState.betAmount == playerState.totalBet || player.playerNum == gameState.lastBet)
 		{
 			result.type = Action::ActionType::NoAction;
 			return;

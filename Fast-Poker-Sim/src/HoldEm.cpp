@@ -63,7 +63,7 @@ void HoldEm::Stop()
 	this->session.complete = true;
 }
 
-bool HoldEm::Update(int& gamesPlayed)
+bool HoldEm::Update(uint64_t& gamesPlayed)
 {
 	assert(gamesPlayed >= 0);
 	assert(this->isPlaying == true);

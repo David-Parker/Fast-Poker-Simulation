@@ -43,19 +43,13 @@ void GameSession::PostBlinds()
 	assert(smallBlindPlayer->chips > 0);
 
 	// Make big and small blind players bet.
-	uint32_t smallBet = smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND, this->playerStates[this->gameState.playerSmallBlind].isAllIn);
-	uint32_t bigBet = bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND, this->playerStates[this->gameState.playerBigBlind].isAllIn);
-	this->gameState.betAmount = BIG_BLIND;
-	this->playerStates[this->gameState.playerSmallBlind].totalBet = smallBet;
-	this->playerStates[this->gameState.playerBigBlind].totalBet = bigBet;
+	smallBlindPlayer->PlaceBet(this->gameState, SMALL_BLIND, this->playerStates[this->gameState.playerSmallBlind]);
+	bigBlindPlayer->PlaceBet(this->gameState, BIG_BLIND, this->playerStates[this->gameState.playerBigBlind]);
 }
 
 void GameSession::DistributePot()
 {
 	assert(gameState.numPlaying > 0);
-
-	uint16_t maxValue = 0;
-	Player* winner = nullptr;
 
 	// Calculate the hand ranks for each player
 	for (char i = 0; i < MAX_PLAYERS; ++i)
@@ -108,13 +102,13 @@ void GameSession::DistributePot()
 					}
 				}
 			}
+			assert(numWinners > 0);
 
 			uint32_t extra = this->gameState.pots[i] % numWinners;
 			uint32_t split = this->gameState.pots[i] / numWinners;
 
 			for (char j = 0; j < MAX_PLAYERS; ++j)
 			{
-				assert(numWinners > 0);
 				PlayerState& state = playerStates[j];
 
 				// Player is in this pot
@@ -190,8 +184,7 @@ void GameSession::NextTurn()
 
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
-		assert(this->playerStates[i].totalBet == 0);
-		//this->playerStates[i].ClearBet();
+		assert(playerStates[i].totalBet == 0);
 	}
 
 	if (this->gameState.numPlaying == 1)
@@ -266,8 +259,7 @@ void GameSession::HandlePlayerChoices()
 				}
 
 				Action action;
-				p.MakeChoice(this->gameState, p.chips, action, playerStates[index]);
-				uint32_t bet = 0;
+				p.MakeChoice(this->gameState, p.chips, action, playerStates[index], players[index]);
 
 				switch (this->gameState.currentStreetState)
 				{
@@ -287,9 +279,7 @@ void GameSession::HandlePlayerChoices()
 							{
 								case Action::ActionType::Bet:
 									turnComplete = false;
-									bet = p.PlaceBet(gameState, action.amount, playerStates[index].isAllIn);
-									playerStates[index].totalBet += bet;
-									gameState.betAmount = bet;
+									p.PlaceBet(gameState, action.amount, playerStates[index]);
 									break;
 								case Action::ActionType::Check:
 									break;
@@ -306,15 +296,11 @@ void GameSession::HandlePlayerChoices()
 							switch (action.type)
 							{
 								case Action::ActionType::Call:
-									bet = p.PlaceBet(gameState, this->gameState.betAmount - playerStates[index].totalBet, playerStates[index].isAllIn);
-									playerStates[index].totalBet += bet;
+									p.Call(gameState, this->gameState.betAmount - playerStates[index].totalBet, playerStates[index]);
 									break;
 								case Action::ActionType::Raise:
 									turnComplete = false;
-									bet = p.PlaceBet(gameState, action.amount, playerStates[index].isAllIn);
-									playerStates[index].totalBet += bet;
-									assert(bet > 0);
-									gameState.betAmount = bet;
+									p.PlaceBet(gameState, action.amount, playerStates[index]);
 									break;
 								case Action::ActionType::Fold:
 									p.Quit();
@@ -330,6 +316,7 @@ void GameSession::HandlePlayerChoices()
 		}
 	}
 
+	// Calculate how the bets will be distributed among the various pots and side pots.
 	if (gameState.betAmount > 0)
 	{
 		for (char i = 0; i < MAX_PLAYERS; ++i)
@@ -344,6 +331,7 @@ void GameSession::HandlePlayerChoices()
 
 		for (char i = 0; i < MAX_PLAYERS; ++i)
 		{
+			// Find the minimum value among all the player's bets
 			uint32_t min = UINT32_MAX;
 			char minPlayer = -1;
 			for (char j = 0; j < MAX_PLAYERS; ++j)
@@ -357,11 +345,14 @@ void GameSession::HandlePlayerChoices()
 				}
 			}
 
+			// All of the outstanding bets are 0, we are done.
 			if (min == UINT32_MAX)
 			{
 				break;
 			}
 
+			// Subtract the minumum bet from all bets and add that to the current pot, if the min betting player went all in,
+			// we create a new side pot by advancing the current pot index.
 			for (char i = 0; i < MAX_PLAYERS; ++i)
 			{
 				PlayerState& state = playerStates[i];
@@ -369,7 +360,7 @@ void GameSession::HandlePlayerChoices()
 				if (state.totalBet > 0)
 				{
 					state.potNum++;
-					this->gameState.pots[this->gameState.currentPot] += min;
+					this->gameState.AddToPot(min);
 					state.totalBet -= min;
 				}
 			}
