@@ -5,3 +5,6 @@ Design principles for performance:
 2) Debug asserts for error handling that can be disabled in release mode, once program is stable.
 3) Keep data types small and avoid making copies.
 4) Inline critical code executed in loops.
+
+SKPokerEval is needed for the evaluation of the hands. See: https://github.com/kennethshackleton/SKPokerEval.git
+and make sure that you add the project in the libs folder.
