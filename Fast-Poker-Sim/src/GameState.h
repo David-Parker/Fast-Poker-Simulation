@@ -22,9 +22,10 @@ public:
 	char playerBigBlind;
 	char playerSmallBlind;
 	uint32_t betAmount;
+	uint32_t previousRaise;
 	char lastBet;
 
-	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(0), playerSmallBlind(1), betAmount(0), pots(), lastBet() {}
+	GameState() : currentStreetState(StreetStates::Deal), currentBetState(BetStates::NoBets), table(), numPlaying(0), currentPot(0), playerBigBlind(1), playerSmallBlind(0), betAmount(0), previousRaise(0), pots(), lastBet() {}
 
 	inline void ClearTable()
 	{
@@ -51,6 +52,7 @@ public:
 		this->playerBigBlind = 0;
 		this->playerSmallBlind = 0;
 		this->betAmount = 0;
+		this->previousRaise = 0;
 		this->lastBet = 0;
 
 		for (char i = 0; i < MAX_PLAYERS; ++i)

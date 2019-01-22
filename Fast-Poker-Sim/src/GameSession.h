@@ -33,16 +33,18 @@ private:
 
 	inline void DealCards()
 	{
-		for (char i = 0; i < MAX_PLAYERS; ++i)
+		char startIndex = (this->gameState.playerBigBlind + 1) % MAX_PLAYERS;
+		for (char i = startIndex; i < startIndex + MAX_PLAYERS; ++i)
 		{
-			Player& p = players[i];
+			char index = i % MAX_PLAYERS;
+			Player& p = players[index];
 
 			if (p.isPlaying)
 			{
-				GetCards(playerStates[i].hand);
-				Card* c1 = playerStates[i].hand[0];
-				Card* c2 = playerStates[i].hand[1];
-				log("Player %d was dealt %s and %s.\n", i, Card::cards[c1->val], Card::cards[c2->val]);
+				GetCards(playerStates[index].hand);
+				Card* c1 = playerStates[index].hand[0];
+				Card* c2 = playerStates[index].hand[1];
+				log("Player %d was dealt %s and %s.\n", index, Card::cards[c1->val], Card::cards[c2->val]);
 			}
 		}
 	}
