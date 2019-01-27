@@ -1,6 +1,7 @@
 #include <cassert>
 #include "HoldEm.h"
 #include "RandomChoiceMaker.h"
+#include "HumanChoiceMaker.h"
 #include "Logger.h"
 
 void HoldEm::RemoveLosingPlayers()
@@ -102,7 +103,15 @@ char HoldEm::AddPlayer()
 
 		if (p.isActive == false)
 		{
-			p.Activate(i, STARTING_CHIPS, new RandomChoiceMaker());
+			if (i > NUM_HUMAN_PLAYERS)
+			{
+				p.Activate(i, STARTING_CHIPS, new HumanChoiceMaker());
+			}
+			else
+			{
+				p.Activate(i, STARTING_CHIPS, new RandomChoiceMaker());
+			}
+
 			p.Play();
 			this->numPlayingPlayers++;
 			return i;
