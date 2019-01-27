@@ -73,11 +73,11 @@ public:
 		gameState.currentBetState = GameState::BetStates::Bets;
 		uint32_t previousBet = amount - gameState.betAmount;
 		uint32_t actualBet = amount > this->chips ? this->chips : amount;
-		this->chips -= actualBet;
+		this->chips -= actualBet - playerState.totalBet;
 		gameState.lastBet = this->playerNum;
 		gameState.previousRaise = previousBet;
 		gameState.betAmount = actualBet > gameState.betAmount ? actualBet : gameState.betAmount;
-		playerState.totalBet += actualBet;
+		playerState.totalBet = actualBet;
 
 		log("Player %d placed bet %d.\n", this->playerNum, actualBet);
 
@@ -91,7 +91,6 @@ public:
 
 	inline void Call(GameState& gameState, uint32_t amount, PlayerState& playerState)
 	{
-		// call is failing to match the total bet on the table
 		assert(this->chips > 0);
 		assert(this->isActive == true);
 		assert(this->isPlaying == true);

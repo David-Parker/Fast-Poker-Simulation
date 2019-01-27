@@ -103,7 +103,7 @@ char HoldEm::AddPlayer()
 
 		if (p.isActive == false)
 		{
-			if (i > NUM_HUMAN_PLAYERS)
+			if (i < NUM_HUMAN_PLAYERS)
 			{
 				p.Activate(i, STARTING_CHIPS, new HumanChoiceMaker());
 			}
