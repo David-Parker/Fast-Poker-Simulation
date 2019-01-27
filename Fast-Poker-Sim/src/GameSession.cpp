@@ -23,15 +23,15 @@ void GameSession::PostBlinds()
 
 		if (p.isPlaying)
 		{
-			if (bigBlindPlayer == nullptr)
-			{
-				bigBlindPlayer = &p;
-				this->gameState.playerBigBlind = index;
-			}
-			else if (smallBlindPlayer == nullptr)
+			if (smallBlindPlayer == nullptr)
 			{
 				smallBlindPlayer = &p;
 				this->gameState.playerSmallBlind = index;
+			}
+			else if (bigBlindPlayer == nullptr)
+			{
+				bigBlindPlayer = &p;
+				this->gameState.playerBigBlind = index;
 			}
 		}
 	}
@@ -181,6 +181,7 @@ void GameSession::NewSession(Players players)
 void GameSession::NextTurn()
 {
 	this->gameState.betAmount = 0;
+	this->gameState.previousRaise = 0;
 
 	for (char i = 0; i < MAX_PLAYERS; ++i)
 	{
@@ -235,7 +236,7 @@ void GameSession::HandlePlayerChoices()
 {
 	assert(this->gameState.numPlaying >= 1);
 
-	char startIndex = this->gameState.playerSmallBlind;
+	char startIndex = this->gameState.playerBigBlind + 1;
 	bool turnComplete = false;
 
 	while (!turnComplete)

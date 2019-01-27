@@ -46,6 +46,10 @@ void HumanChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount
 					std::cout << "Invalid bet amount, chips remaining: " << chipCount << std::endl;
 					continue;
 				}
+				else if (bet < BIG_BLIND)
+				{
+					bet = BIG_BLIND;
+				}
 
 				result.amount = bet;
 				break;
@@ -76,8 +80,11 @@ void HumanChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount
 			return;
 		}
 
-		if (gameState.betAmount >= chipCount)
+		uint32_t amountNeededToCall = gameState.betAmount - playerState.totalBet;
+
+		if (amountNeededToCall > chipCount / 2)
 		{
+			// note that all-in is a valid response here
 			std::cout << "Please make a choice: call, or fold." << std::endl;
 
 			while (1)
@@ -124,7 +131,7 @@ void HumanChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount
 				}
 				else if (response == "raise")
 				{
-					assert(chipCount > 0 && chipCount > gameState.betAmount);
+					assert(chipCount > 0);
 					uint32_t raise;
 					uint32_t maxRaise = chipCount - gameState.betAmount;
 					std::cin >> raise;
@@ -134,6 +141,10 @@ void HumanChoiceMaker::MakeChoice(const GameState& gameState, uint32_t chipCount
 					{
 						std::cout << "Invalid bet amount, max raise is: " << maxRaise << std::endl;
 						continue;
+					}
+					else if (raise < gameState.previousRaise || raise < BIG_BLIND)
+					{
+						raise = gameState.previousRaise < BIG_BLIND ? BIG_BLIND : gameState.previousRaise;
 					}
 
 					result.amount = gameState.betAmount + raise;

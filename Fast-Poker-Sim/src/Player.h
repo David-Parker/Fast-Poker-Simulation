@@ -71,16 +71,19 @@ public:
 		assert(this->isPlaying == true);
 		assert(amount > 0);
 		gameState.currentBetState = GameState::BetStates::Bets;
+		uint32_t previousBet = amount - gameState.betAmount;
 		uint32_t actualBet = amount > this->chips ? this->chips : amount;
-		this->chips -= actualBet;
+		this->chips -= actualBet - playerState.totalBet;
 		gameState.lastBet = this->playerNum;
+		gameState.previousRaise = previousBet;
 		gameState.betAmount = actualBet > gameState.betAmount ? actualBet : gameState.betAmount;
-		playerState.totalBet += actualBet;
+		playerState.totalBet = actualBet;
 
 		log("Player %d placed bet %d.\n", this->playerNum, actualBet);
 
 		if (this->chips == 0)
 		{
+			// must consider if an all-in is a CALL or a RAISE in some situations
 			log("Player %d is all in.\n", this->playerNum);
 			playerState.isAllIn = true;
 		}
